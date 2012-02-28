@@ -86,8 +86,8 @@ void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
 {
   x->input[6] = U8TO32_LITTLE(iv + 0);
   x->input[7] = U8TO32_LITTLE(iv + 4);
-  x->input[8] = 0;
-  x->input[9] = 0;
+  x->input[8] = U8TO32_LITTLE(iv + 8);
+  x->input[9] = U8TO32_LITTLE(iv + 12);
 }
 
 void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
@@ -103,6 +103,19 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
       x->input[9] = PLUSONE(x->input[9]);
       /* stopping at 2^70 bytes per nonce is user's responsibility */
     }
+    if (!x->input[9]) {
+      x->input[6] = PLUSONE(x->input[6]);
+      /* stopping at 2^70 bytes per nonce is user's responsibility */
+    }
+    if (!x->input[6]) {
+      x->input[7] = PLUSONE(x->input[7]);
+      /* stopping at 2^70 bytes per nonce is user's responsibility */
+    }
+    if (!x->input[7]) {
+      x->input[8] = PLUSONE(x->input[8]);
+      /* stopping at 2^70 bytes per nonce is user's responsibility */
+    }
+
     if (bytes <= 64) {
       for (i = 0;i < bytes;++i) c[i] = m[i] ^ output[i];
       return;
